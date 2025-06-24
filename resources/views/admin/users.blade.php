@@ -1,36 +1,127 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Users Management')
-@section('page-title', 'Users')
+@section('page-title', 'Users Management')
 @section('breadcrumb', 'Users')
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+
+<style>
+    .users-header {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .users-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 100px;
+        height: 200%;
+        background: rgba(255,255,255,0.1);
+        transform: rotate(15deg);
+    }
+    
+    .users-table-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        padding: 25px;
+    }
+    
+    .table th {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-add-user {
+        background: linear-gradient(45deg, #3b82f6 0%, #1d4ed8 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 25px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-user:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        border-bottom: none;
+        padding: 20px 25px;
+    }
+    
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+</style>
 @endpush
 
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3 class="card-title">Users List</h3>
-            <a class="btn btn-success" href="javascript:void(0)" id="createNewUser"> Create New User</a>
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="users-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-users mr-3"></i>Users Management
+                </h1>
+                <p class="mb-0 opacity-75">Manage system users and their access levels</p>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-add-user" id="createNewUser">
+                    <i class="fas fa-user-plus mr-2"></i>Add New User
+                </button>
+            </div>
         </div>
     </div>
-    <div class="card-body">
-        <table class="table table-bordered data-table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th width="280px">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+
+    <!-- Users Table -->
+    <div class="users-table-container">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th width="5%">No</th>
+                        <th width="25%">Name</th>
+                        <th width="25%">Email</th>
+                        <th width="15%">Role</th>
+                        <th width="15%">Status</th>
+                        <th width="15%">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -119,7 +210,7 @@
     var table = $('.data-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('admin.users') }}",
+        ajax: "{{ route('admin.users.data') }}",
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
             {data: 'name', name: 'name'},
