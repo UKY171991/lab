@@ -69,6 +69,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/associates', [AdminController::class, 'storeAssociate'])->name('associates.store');
     Route::get('/associates/{associate}/edit', [AdminController::class, 'editAssociate'])->name('associates.edit');
     Route::delete('/associates/{associate}', [AdminController::class, 'destroyAssociate'])->name('associates.destroy');
+    Route::get('/associates/test', [AdminController::class, 'testAssociatesData'])->name('associates.test');
 
     // Entry Routes
     Route::prefix('entry')->name('entry.')->group(function () {

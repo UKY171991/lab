@@ -576,13 +576,10 @@ $(document).ready(function() {
             contentType: false,
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },            success: function(response) {
+            },
+            success: function(response) {
                 $('#patientModal').modal('hide');
                 table.ajax.reload();
-                
-                // Reset button immediately on success
-                $('#savePatient').prop('disabled', false).html('<i class="fas fa-save mr-2"></i>Save Patient');
-                
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
@@ -794,23 +791,7 @@ $(document).ready(function() {
                     }
                 });
             }
-        });    });
-
-    // Modal event handlers to ensure button state is reset
-    $('#patientModal').on('show.bs.modal', function () {
-        // Reset button state when modal is shown
-        var saveBtn = $('#savePatient');
-        saveBtn.prop('disabled', false).html('<i class="fas fa-save mr-2"></i>Save Patient');
-    });
-    
-    $('#patientModal').on('shown.bs.modal', function () {
-        // Focus on first input when modal is fully shown
-        $('#clientName').focus();
-    });
-    
-    $('#patientModal').on('hidden.bs.modal', function () {
-        // Reset everything when modal is hidden
-        resetForm();
+        });
     });
 
     // Reset form function
@@ -821,10 +802,6 @@ $(document).ready(function() {
         $('.invalid-feedback').text('');
         $('#status').prop('checked', true);
         $('#uhid').val(''); // Clear UHID for new patients
-        
-        // Reset button state
-        var saveBtn = $('#savePatient');
-        saveBtn.prop('disabled', false).html('<i class="fas fa-save mr-2"></i>Save Patient');
     }
 
     // Enable tooltips

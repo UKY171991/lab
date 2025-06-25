@@ -319,9 +319,7 @@ $(document).ready(function() {
         $('#categoryModalLabel').html('<i class="fas fa-tags mr-2"></i>Add Test Category');
         $('#categoryModal').modal('show');
         toastr.info('Create a new test category');
-    });
-
-    // Save category
+    });    // Save category
     $('#categoryForm').on('submit', function(e) {
         e.preventDefault();
         
@@ -333,8 +331,8 @@ $(document).ready(function() {
         
         // Show loading
         var saveBtn = $(this).find('button[type="submit"]');
-        var originalText = saveBtn.html();
-        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Saving...');
+        var originalText = '<i class="fas fa-save mr-1"></i>Save Category';
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Processing...');
         
         $.ajax({
             url: "{{ route('admin.test-categories.store') }}",
@@ -346,9 +344,16 @@ $(document).ready(function() {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
+                // Reset button first
+                saveBtn.prop('disabled', false).html(originalText);
+                
+                // Close modal and refresh table
                 $('#categoryModal').modal('hide');
                 table.ajax.reload();
                 toastr.success(response.success);
+                
+                // Reset form
+                resetForm();
             },
             error: function(xhr) {
                 if (xhr.status === 422) {
@@ -364,8 +369,8 @@ $(document).ready(function() {
                 } else {
                     toastr.error('An error occurred while saving category');
                 }
-            },
-            complete: function() {
+                
+                // Reset button on error too
                 saveBtn.prop('disabled', false).html(originalText);
             }
         });
@@ -445,8 +450,23 @@ $(document).ready(function() {
                         toastr.error('Error deleting category');
                     }
                 }
-            });
-        }
+            });        }
+    });    // Modal event handlers to ensure button state is reset
+    $('#categoryModal').on('show.bs.modal', function () {
+        // Reset button state when modal is shown
+        var saveBtn = $(this).find('button[type="submit"]');
+        var originalText = '<i class="fas fa-save mr-1"></i>Save Category';
+        saveBtn.prop('disabled', false).html(originalText);
+    });
+    
+    $('#categoryModal').on('shown.bs.modal', function () {
+        // Focus on first input when modal is fully shown
+        $('#categoryName').focus();
+    });
+    
+    $('#categoryModal').on('hidden.bs.modal', function () {
+        // Reset everything when modal is hidden
+        resetForm();
     });
 
     // Reset form function
@@ -456,6 +476,11 @@ $(document).ready(function() {
         $('#status').prop('checked', true);
         $('.form-control').removeClass('is-invalid');
         $('.invalid-feedback').text('');
+        
+        // Reset button state
+        var saveBtn = $('#categoryForm').find('button[type="submit"]');
+        var originalText = '<i class="fas fa-save mr-1"></i>Save Category';
+        saveBtn.prop('disabled', false).html(originalText);
     }
 });
 </script>

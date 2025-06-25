@@ -148,6 +148,62 @@
         .table tbody tr:hover {
             background-color: #f8fafc;
         }
+        
+        /* Remove unwanted outlines globally */
+        * {
+            outline: none !important;
+        }
+        
+        *:focus {
+            outline: none !important;
+        }
+        
+        /* Browser focus indicator override */
+        :focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Remove any default browser outlines */
+        input:focus,
+        textarea:focus,
+        select:focus,
+        button:focus,
+        a:focus,
+        div:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+        }
+        
+        /* Remove outlines from containers */
+        .container,
+        .container-fluid,
+        .card,
+        .table-responsive,
+        .modal,
+        .row,
+        .col,
+        [class*="col-"] {
+            outline: none !important;
+            border: none !important;
+        }
+        
+        /* Restore important borders where needed */
+        .table {
+            border: none !important;
+        }
+        
+        .table th,
+        .table td {
+            border-top: 1px solid #dee2e6 !important;
+            border-bottom: none !important;
+            border-left: none !important;
+            border-right: none !important;
+        }
+        
+        .card {
+            border: 1px solid rgba(0,0,0,.125) !important;
+        }
     </style>
     
     @stack('styles')
@@ -511,6 +567,20 @@
                     submitBtn.prop('disabled', true);
                     submitBtn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Processing...');
                 }
+            });
+            
+            // Remove any unwanted outlines that might appear
+            function removeOutlines() {
+                $('*').css('outline', 'none');
+                $('.table, th, td').css('border', ''); // Preserve table borders
+            }
+            
+            // Call removeOutlines periodically and on focus events
+            removeOutlines();
+            setInterval(removeOutlines, 2000);
+            
+            $(document).on('focusin', '*', function() {
+                $(this).css('outline', 'none');
             });
         });
     </script>

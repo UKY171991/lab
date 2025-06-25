@@ -15,6 +15,7 @@ use App\Models\ReportTest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -36,12 +37,22 @@ class AdminController extends Controller
         try {
             $userId = $request->user_id;
 
-            $request->validate([
+            // Build validation rules
+            $rules = [
                 'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $userId],
                 'role_id' => ['required', 'exists:roles,id'],
-                'password' => [$userId ? 'nullable' : 'required', 'confirmed', Rules\Password::defaults()],
-            ]);
+            ];
+
+            // Handle unique validation for email
+            if ($userId && is_numeric($userId)) {
+                $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)];
+                $rules['password'] = ['nullable', 'confirmed', Rules\Password::defaults()];
+            } else {
+                $rules['email'] = ['required', 'string', 'email', 'max:255', 'unique:users,email'];
+                $rules['password'] = ['required', 'confirmed', Rules\Password::defaults()];
+            }
+
+            $request->validate($rules);
 
             $data = $request->only('name', 'email', 'role_id');
 
@@ -444,7 +455,8 @@ class AdminController extends Controller
                 'license_number', 'license_expiry', 'notes'
             ]);
 
-            $data['status'] = $request->has('status');
+            // Handle status - convert to boolean
+            $data['status'] = filter_var($request->input('status', 0), FILTER_VALIDATE_BOOLEAN);
 
             Doctor::updateOrCreate(['id' => $doctorId], $data);
 
@@ -489,6 +501,9 @@ class AdminController extends Controller
             ->addColumn('age_display', function ($row) {
                 return $row->age ? $row->age . ' years' : 'N/A';
             })
+            ->addColumn('created_at_formatted', function ($row) {
+                return $row->created_at ? $row->created_at->format('d M Y') : 'N/A';
+            })
             ->addColumn('action', function ($row) {
                 $btn = '<div class="btn-group" role="group">';
                 $btn .= '<button type="button" class="btn btn-info btn-sm viewPatient" data-id="'.$row->id.'" title="View Details" data-toggle="tooltip">';
@@ -509,14 +524,14 @@ class AdminController extends Controller
         try {
             $patientId = $request->patient_id;
 
-            $request->validate([
+            // Build validation rules
+            $rules = [
                 'client_name' => ['required', 'string', 'max:255'],
                 'mobile_number' => ['required', 'string', 'max:255'],
                 'father_husband_name' => ['nullable', 'string', 'max:255'],
                 'address' => ['nullable', 'string'],
                 'sex' => ['nullable', 'in:Male,Female,Other'],
                 'age' => ['nullable', 'integer', 'min:0', 'max:150'],
-                'uhid' => ['nullable', 'string', 'max:255', 'unique:patients,uhid,' . $patientId],
                 'email' => ['nullable', 'email', 'max:255'],
                 'date_of_birth' => ['nullable', 'date'],
                 'blood_group' => ['nullable', 'string', 'max:10'],
@@ -525,7 +540,16 @@ class AdminController extends Controller
                 'medical_history' => ['nullable', 'string'],
                 'allergies' => ['nullable', 'string'],
                 'notes' => ['nullable', 'string'],
-            ]);
+            ];
+
+            // Handle unique validation for UHID
+            if ($patientId && is_numeric($patientId)) {
+                $rules['uhid'] = ['nullable', 'string', 'max:255', Rule::unique('patients', 'uhid')->ignore($patientId)];
+            } else {
+                $rules['uhid'] = ['nullable', 'string', 'max:255', 'unique:patients,uhid'];
+            }
+
+            $request->validate($rules);
 
             $data = $request->only([
                 'client_name', 'mobile_number', 'father_husband_name', 'address', 'sex',
@@ -685,10 +709,31 @@ class AdminController extends Controller
         try {
             $categoryId = $request->category_id;
 
-            $request->validate([
-                'category_name' => ['required', 'string', 'max:255', 'unique:test_categories,category_name,' . $categoryId],
+            // Build validation rules
+            $rules = [
                 'description' => ['nullable', 'string'],
-            ]);
+            ];
+
+            // Handle unique validation for category_name
+            if ($categoryId && is_numeric($categoryId)) {
+                // Update existing category - exclude current record from unique check
+                $rules['category_name'] = [
+                    'required', 
+                    'string', 
+                    'max:255', 
+                    Rule::unique('test_categories', 'category_name')->ignore($categoryId)
+                ];
+            } else {
+                // Create new category - check for unique name
+                $rules['category_name'] = [
+                    'required', 
+                    'string', 
+                    'max:255', 
+                    'unique:test_categories,category_name'
+                ];
+            }
+
+            $request->validate($rules);
 
             $data = $request->only([
                 'category_name', 'description'
@@ -696,11 +741,20 @@ class AdminController extends Controller
 
             $data['status'] = $request->has('status');
 
-            TestCategory::updateOrCreate(['id' => $categoryId], $data);
+            if ($categoryId && is_numeric($categoryId)) {
+                // Update existing category
+                $category = TestCategory::findOrFail($categoryId);
+                $category->update($data);
+            } else {
+                // Create new category
+                TestCategory::create($data);
+            }
 
             return response()->json(['success' => 'Test category saved successfully.']);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred while saving the category.'], 500);
         }
     }
 
@@ -725,7 +779,7 @@ class AdminController extends Controller
 
     public function associates()
     {
-        return view('admin.master.associates');
+        return view('admin.master.associates_fixed');
     }
 
     // ...existing associate methods...
@@ -753,30 +807,38 @@ class AdminController extends Controller
 
     public function getAssociates(Request $request)
     {
-        $data = Associate::select('associates.*')->orderBy('created_at', 'desc');
-        return DataTables::of($data)
-            ->addIndexColumn()
-            ->addColumn('percent_display', function ($row) {
-                return '<span class="badge badge-primary">' . $row->percent . '%</span>';
-            })
-            ->addColumn('status', function ($row) {
-                return $row->status ? 
-                    '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>' : 
-                    '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Inactive</span>';
-            })
-            ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group" role="group">';
-                $btn .= '<button type="button" class="btn btn-warning btn-sm editAssociate" data-id="'.$row->id.'" title="Edit Associate" data-toggle="tooltip">';
-                $btn .= '<i class="fas fa-edit"></i></button>';
-                $btn .= '<button type="button" class="btn btn-info btn-sm viewAssociate" data-id="'.$row->id.'" title="View Details" data-toggle="tooltip">';
-                $btn .= '<i class="fas fa-eye"></i></button>';
-                $btn .= '<button type="button" class="btn btn-danger btn-sm deleteAssociate" data-id="'.$row->id.'" data-name="'.htmlspecialchars($row->name).'" title="Delete Associate" data-toggle="tooltip">';
-                $btn .= '<i class="fas fa-trash"></i></button>';
-                $btn .= '</div>';
-                return $btn;
-            })
-            ->rawColumns(['percent_display', 'status', 'action'])
-            ->make(true);
+        try {
+            $data = Associate::select('associates.*')->orderBy('created_at', 'desc');
+            
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('percent_display', function ($row) {
+                    return '<span class="badge badge-primary">' . ($row->percent ?? 0) . '%</span>';
+                })
+                ->addColumn('status', function ($row) {
+                    return $row->status ? 
+                        '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>' : 
+                        '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Inactive</span>';
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group" role="group">';
+                    $btn .= '<button type="button" class="btn btn-warning btn-sm editAssociate" data-id="'.$row->id.'" title="Edit Associate" data-toggle="tooltip">';
+                    $btn .= '<i class="fas fa-edit"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-info btn-sm viewAssociate" data-id="'.$row->id.'" title="View Details" data-toggle="tooltip">';
+                    $btn .= '<i class="fas fa-eye"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-danger btn-sm deleteAssociate" data-id="'.$row->id.'" data-name="'.htmlspecialchars($row->name ?? '').'" title="Delete Associate" data-toggle="tooltip">';
+                    $btn .= '<i class="fas fa-trash"></i></button>';
+                    $btn .= '</div>';
+                    return $btn;
+                })
+                ->rawColumns(['percent_display', 'status', 'action'])
+                ->make(true);
+        } catch (\Exception $e) {
+            \Log::error('DataTables error in getAssociates: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error loading associates data: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function storeAssociate(Request $request)
@@ -991,5 +1053,24 @@ class AdminController extends Controller
     {
         $report = Report::with(['patient', 'doctor', 'reportTests.test'])->findOrFail($id);
         return view('admin.reports.print', compact('report'));
+    }
+
+    public function testAssociatesData()
+    {
+        try {
+            $associates = Associate::all();
+            return response()->json([
+                'status' => 'success',
+                'count' => $associates->count(),
+                'data' => $associates->toArray()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
     }
 }
