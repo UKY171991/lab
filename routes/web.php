@@ -8,6 +8,52 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Route to run seeders (for development only)
+Route::get('/run-seeders', function () {
+    try {
+        // Run seeders
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'RoleSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'DoctorSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'PatientSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'TestCategorySeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'TestSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'PackageSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'AssociateSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'ReportSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'ReportTestSeeder']);
+        
+        // Create users
+        \App\Models\User::factory(100)->create();
+        
+        $counts = [
+            'Roles' => \App\Models\Role::count(),
+            'Users' => \App\Models\User::count(),
+            'Doctors' => \App\Models\Doctor::count(),
+            'Patients' => \App\Models\Patient::count(),
+            'Test Categories' => \App\Models\TestCategory::count(),
+            'Tests' => \App\Models\Test::count(),
+            'Packages' => \App\Models\Package::count(),
+            'Associates' => \App\Models\Associate::count(),
+            'Reports' => \App\Models\Report::count(),
+            'Report Tests' => \App\Models\ReportTest::count(),
+        ];
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Seeders executed successfully!',
+            'counts' => $counts
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
 Route::get('/dashboard', [AdminController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

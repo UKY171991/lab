@@ -63,5 +63,9 @@ class AssociateSeeder extends Seeder
         foreach ($associates as $associate) {
             Associate::create($associate);
         }
+
+        // Create additional associates using factory (to reach 100 total)
+        $existingCount = count($associates);
+        Associate::factory(100 - $existingCount)->create();
     }
 }

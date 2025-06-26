@@ -98,5 +98,9 @@ class PatientSeeder extends Seeder
         foreach ($patients as $patient) {
             \App\Models\Patient::create($patient);
         }
+
+        // Create additional patients using factory (to reach 100 total)
+        $existingCount = count($patients);
+        \App\Models\Patient::factory(100 - $existingCount)->create();
     }
 }

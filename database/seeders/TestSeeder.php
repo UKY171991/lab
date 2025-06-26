@@ -84,5 +84,9 @@ class TestSeeder extends Seeder
         foreach ($tests as $test) {
             Test::create($test);
         }
+
+        // Create additional tests using factory (to reach 100 total)
+        $existingCount = count($tests);
+        Test::factory(100 - $existingCount)->create();
     }
 }

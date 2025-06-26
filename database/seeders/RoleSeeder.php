@@ -13,8 +13,17 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create(['name' => 'Admin']);
-        Role::create(['name' => 'Doctor']);
-        Role::create(['name' => 'Patient']);
+        // Create basic required roles first
+        $basicRoles = [
+            ['name' => 'admin', 'description' => 'Administrator with full access'],
+            ['name' => 'doctor', 'description' => 'Medical doctor'],
+            ['name' => 'technician', 'description' => 'Lab technician'],
+            ['name' => 'receptionist', 'description' => 'Front desk receptionist'],
+            ['name' => 'manager', 'description' => 'Lab manager'],
+        ];
+
+        foreach ($basicRoles as $role) {
+            Role::firstOrCreate(['name' => $role['name']], $role);
+        }
     }
 }

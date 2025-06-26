@@ -99,5 +99,9 @@ class TestCategorySeeder extends Seeder
         foreach ($categories as $categoryData) {
             TestCategory::create($categoryData);
         }
+
+        // Create additional categories using factory (to reach 100 total)
+        $existingCount = count($categories);
+        TestCategory::factory(100 - $existingCount)->create();
     }
 }

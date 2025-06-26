@@ -55,5 +55,9 @@ class PackageSeeder extends Seeder
         foreach ($packages as $packageData) {
             Package::create($packageData);
         }
+
+        // Create additional packages using factory (to reach 100 total)
+        $existingCount = count($packages);
+        Package::factory(100 - $existingCount)->create();
     }
 }

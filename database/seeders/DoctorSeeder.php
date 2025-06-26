@@ -106,5 +106,8 @@ class DoctorSeeder extends Seeder
         foreach ($doctors as $doctor) {
             \App\Models\Doctor::create($doctor);
         }
+
+        // Create additional 92 doctors using factory (8 already created above = 100 total)
+        \App\Models\Doctor::factory(92)->create();
     }
 }
