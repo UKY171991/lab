@@ -8,51 +8,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route to run seeders (for development only)
-Route::get('/run-seeders', function () {
-    try {
-        // Run seeders
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'RoleSeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'DoctorSeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'PatientSeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'TestCategorySeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'TestSeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'PackageSeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'AssociateSeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'ReportSeeder']);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'ReportTestSeeder']);
-        
-        // Create users
-        \App\Models\User::factory(100)->create();
-        
-        $counts = [
-            'Roles' => \App\Models\Role::count(),
-            'Users' => \App\Models\User::count(),
-            'Doctors' => \App\Models\Doctor::count(),
-            'Patients' => \App\Models\Patient::count(),
-            'Test Categories' => \App\Models\TestCategory::count(),
-            'Tests' => \App\Models\Test::count(),
-            'Packages' => \App\Models\Package::count(),
-            'Associates' => \App\Models\Associate::count(),
-            'Reports' => \App\Models\Report::count(),
-            'Report Tests' => \App\Models\ReportTest::count(),
-        ];
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Seeders executed successfully!',
-            'counts' => $counts
-        ]);
-        
-    } catch (Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error: ' . $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ], 500);
-    }
-});
+
 
 Route::get('/dashboard', [AdminController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -64,6 +20,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard-stats', [AdminController::class, 'getDashboardStats'])->name('dashboard.stats');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
 
@@ -79,20 +36,25 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/tests/data', [AdminController::class, 'getTests'])->name('tests.data');
     Route::post('/tests', [AdminController::class, 'storeTest'])->name('tests.store');
     Route::get('/tests/{test}/edit', [AdminController::class, 'editTest'])->name('tests.edit');
+    Route::put('/tests/{test}', [AdminController::class, 'updateTest'])->name('tests.update');
     Route::delete('/tests/{test}', [AdminController::class, 'destroyTest'])->name('tests.destroy');
     
     // Doctor Management Routes
     Route::get('/doctors', [AdminController::class, 'doctors'])->name('doctors');
+    Route::get('/doctors/create', [AdminController::class, 'createDoctor'])->name('doctors.create');
     Route::get('/doctors/data', [AdminController::class, 'getDoctors'])->name('doctors.data');
     Route::post('/doctors', [AdminController::class, 'storeDoctor'])->name('doctors.store');
     Route::get('/doctors/{doctor}/edit', [AdminController::class, 'editDoctor'])->name('doctors.edit');
+    Route::put('/doctors/{doctor}', [AdminController::class, 'updateDoctor'])->name('doctors.update');
     Route::delete('/doctors/{doctor}', [AdminController::class, 'destroyDoctor'])->name('doctors.destroy');
     
     // Patient Management Routes
     Route::get('/patients', [AdminController::class, 'patients'])->name('patients');
+    Route::get('/patients/create', [AdminController::class, 'createPatient'])->name('patients.create');
     Route::get('/patients/data', [AdminController::class, 'getPatients'])->name('patients.data');
     Route::post('/patients', [AdminController::class, 'storePatient'])->name('patients.store');
     Route::get('/patients/{patient}/edit', [AdminController::class, 'editPatient'])->name('patients.edit');
+    Route::put('/patients/{patient}', [AdminController::class, 'updatePatient'])->name('patients.update');
     Route::delete('/patients/{patient}', [AdminController::class, 'destroyPatient'])->name('patients.destroy');
     
     // Package Management Routes
@@ -100,6 +62,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/packages/data', [AdminController::class, 'getPackages'])->name('packages.data');
     Route::post('/packages', [AdminController::class, 'storePackage'])->name('packages.store');
     Route::get('/packages/{package}/edit', [AdminController::class, 'editPackage'])->name('packages.edit');
+    Route::put('/packages/{package}', [AdminController::class, 'updatePackage'])->name('packages.update');
     Route::delete('/packages/{package}', [AdminController::class, 'destroyPackage'])->name('packages.destroy');
     
     // Test Category Management Routes
@@ -107,6 +70,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/test-categories/data', [AdminController::class, 'getTestCategories'])->name('test-categories.data');
     Route::post('/test-categories', [AdminController::class, 'storeTestCategory'])->name('test-categories.store');
     Route::get('/test-categories/{category}/edit', [AdminController::class, 'editTestCategory'])->name('test-categories.edit');
+    Route::put('/test-categories/{category}', [AdminController::class, 'updateTestCategory'])->name('test-categories.update');
     Route::delete('/test-categories/{category}', [AdminController::class, 'destroyTestCategory'])->name('test-categories.destroy');
     
     // Associate Management Routes
@@ -114,8 +78,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/associates/data', [AdminController::class, 'getAssociates'])->name('associates.data');
     Route::post('/associates', [AdminController::class, 'storeAssociate'])->name('associates.store');
     Route::get('/associates/{associate}/edit', [AdminController::class, 'editAssociate'])->name('associates.edit');
+    Route::put('/associates/{associate}', [AdminController::class, 'updateAssociate'])->name('associates.update');
     Route::delete('/associates/{associate}', [AdminController::class, 'destroyAssociate'])->name('associates.destroy');
-    Route::get('/associates/test', [AdminController::class, 'testAssociatesData'])->name('associates.test');
+    
+    // Reports Management Routes
+    Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+    Route::get('/reports/create', [AdminController::class, 'createReport'])->name('reports.create');
+    Route::get('/reports/data', [AdminController::class, 'getReports'])->name('reports.data');
+    Route::post('/reports', [AdminController::class, 'storeReport'])->name('reports.store');
+    Route::get('/reports/{report}', [AdminController::class, 'showReport'])->name('reports.show');
+    Route::get('/reports/{report}/edit', [AdminController::class, 'editReport'])->name('reports.edit');
+    Route::put('/reports/{report}', [AdminController::class, 'updateReport'])->name('reports.update');
+    Route::delete('/reports/{report}', [AdminController::class, 'destroyReport'])->name('reports.destroy');
+    Route::get('/reports/{report}/print', [AdminController::class, 'printReport'])->name('reports.print');
 
     // Entry Routes
     Route::prefix('entry')->name('entry.')->group(function () {

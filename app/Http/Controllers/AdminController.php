@@ -26,6 +26,23 @@ class AdminController extends Controller
         return view('admin.dashboard');
     }
 
+    public function getDashboardStats()
+    {
+        return response()->json([
+            'success' => true,
+            'stats' => [
+                'reports' => Report::count(),
+                'patients' => Patient::count(),
+                'pending' => Report::where('report_status', 'pending')->count(),
+                'tests' => Test::count(),
+                'doctors' => Doctor::count(),
+                'users' => User::count(),
+                'completed_today' => Report::whereDate('created_at', today())->count(),
+                'revenue_today' => Report::whereDate('created_at', today())->sum('total_amount') ?? 0
+            ]
+        ]);
+    }
+
     public function users(Request $request)
     {
         $roles = Role::all();
@@ -82,17 +99,44 @@ class AdminController extends Controller
     public function getUsers(Request $request)
     {
         $data = User::with('role')->select('users.*');
+        
         return DataTables::of($data)
             ->addIndexColumn()
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="row-checkbox" value="'.$row->id.'">';
+            })
+            ->addColumn('avatar', function ($row) {
+                $avatar = $row->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($row->name).'&background=6366f1&color=ffffff&size=40';
+                return '<img src="'.$avatar.'" class="user-avatar" alt="Avatar">';
+            })
             ->addColumn('role', function ($row) {
-                return $row->role ? $row->role->name : 'N/A';
+                $roleColor = $row->role && $row->role->name === 'admin' ? 'danger' : 'primary';
+                return $row->role ? '<span class="badge badge-'.$roleColor.'">'.$row->role->name.'</span>' : '<span class="badge badge-secondary">No Role</span>';
+            })
+            ->addColumn('status', function ($row) {
+                $isActive = $row->email_verified_at ? true : false;
+                $color = $isActive ? 'success' : 'warning';
+                $icon = $isActive ? 'check-circle' : 'clock';
+                $text = $isActive ? 'Active' : 'Pending';
+                return '<span class="badge badge-'.$color.'"><i class="fas fa-'.$icon.' mr-1"></i>'.$text.'</span>';
+            })
+            ->addColumn('last_login', function ($row) {
+                return $row->last_login_at ? $row->last_login_at->diffForHumans() : '<span class="text-muted">Never</span>';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$row->id.'" data-original-title="Edit" class="edit btn btn-primary btn-sm editUser">Edit</a>';
-                $btn .= ' <a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$row->id.'" data-original-title="Delete" class="btn btn-danger btn-sm deleteUser">Delete</a>';
+                $btn = '<div class="btn-group" role="group">';
+                $btn .= '<button type="button" class="btn btn-info btn-sm viewUser" data-id="'.$row->id.'" title="View Details" data-toggle="tooltip">';
+                $btn .= '<i class="fas fa-eye"></i></button>';
+                $btn .= '<button type="button" class="btn btn-primary btn-sm editUser" data-id="'.$row->id.'" title="Edit User" data-toggle="tooltip">';
+                $btn .= '<i class="fas fa-edit"></i></button>';
+                $btn .= '<button type="button" class="btn btn-warning btn-sm resetPassword" data-id="'.$row->id.'" title="Reset Password" data-toggle="tooltip">';
+                $btn .= '<i class="fas fa-key"></i></button>';
+                $btn .= '<button type="button" class="btn btn-danger btn-sm deleteUser" data-id="'.$row->id.'" title="Delete User" data-toggle="tooltip">';
+                $btn .= '<i class="fas fa-trash"></i></button>';
+                $btn .= '</div>';
                 return $btn;
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['checkbox', 'avatar', 'role', 'status', 'last_login', 'action'])
             ->make(true);
     }
 
@@ -314,9 +358,8 @@ class AdminController extends Controller
     // Master Menu Methods
     public function tests()
     {
-        // Add some debugging
-        \Log::info('Tests page accessed', ['user' => auth()->user()]);
-        return view('admin.master.tests');
+        $categories = TestCategory::where('status', true)->orderBy('category_name')->get();
+        return view('admin.master.tests-enhanced', compact('categories'));
     }
 
     public function getTests(Request $request)
@@ -389,16 +432,42 @@ class AdminController extends Controller
         return response()->json($test);
     }
 
-    public function destroyTest($id)
+    public function updateTest(Request $request, $id)
     {
-        $test = Test::findOrFail($id);
-        $test->delete();
-        return response()->json(['success' => 'Test deleted successfully.']);
+        try {
+            $test = Test::findOrFail($id);
+
+            $request->validate([
+                'test_name' => ['required', 'string', 'max:255'],
+                'specimen' => ['nullable', 'string', 'max:255'],
+                'result_default' => ['nullable', 'string'],
+                'unit' => ['nullable', 'string', 'max:255'],
+                'reference_range' => ['nullable', 'string', 'max:255'],
+                'min_value' => ['nullable', 'numeric'],
+                'max_value' => ['nullable', 'numeric'],
+                'testcode' => ['nullable', 'string', 'max:255'],
+                'individual_method' => ['nullable', 'string', 'max:255'],
+            ]);
+
+            $data = $request->only([
+                'test_name', 'specimen', 'result_default', 'unit', 'reference_range',
+                'min_value', 'max_value', 'testcode', 'individual_method'
+            ]);
+
+            $data['is_sub_heading'] = $request->has('is_sub_heading');
+            $data['status'] = $request->has('status');
+
+            $test->update($data);
+
+            return response()->json(['success' => 'Test updated successfully.']);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
     }
 
     public function doctors()
     {
-        return view('admin.master.doctors');
+        return view('admin.master.doctors-enhanced');
     }
 
     public function getDoctors(Request $request)
@@ -479,9 +548,14 @@ class AdminController extends Controller
         return response()->json(['success' => 'Doctor deleted successfully.']);
     }
 
+    public function createDoctor()
+    {
+        return view('admin.master.doctors-create');
+    }
+
     public function patients()
     {
-        return view('admin.master.patients');
+        return view('admin.master.patients-enhanced');
     }
 
     public function getPatients(Request $request)
@@ -580,10 +654,15 @@ class AdminController extends Controller
         return response()->json(['success' => 'Patient deleted successfully.']);
     }
 
+    public function createPatient()
+    {
+        return view('admin.master.patients-create');
+    }
+
     public function packages()
     {
         $tests = Test::where('status', true)->orderBy('test_name')->get();
-        return view('admin.master.packages', compact('tests'));
+        return view('admin.master.packages-enhanced', compact('tests'));
     }
 
     public function getPackages(Request $request)
@@ -662,16 +741,47 @@ class AdminController extends Controller
         return response()->json($package);
     }
 
-    public function destroyPackage($id)
+    public function updatePackage(Request $request, $id)
     {
-        $package = Package::findOrFail($id);
-        $package->delete();
-        return response()->json(['success' => 'Package deleted successfully.']);
+        try {
+            $package = Package::findOrFail($id);
+
+            $request->validate([
+                'package_name' => ['required', 'string', 'max:255'],
+                'amount' => ['required', 'numeric', 'min:0'],
+                'description' => ['nullable', 'string'],
+                'tests' => ['nullable', 'string'], // JSON string from frontend
+            ]);
+
+            $data = $request->only([
+                'package_name', 'amount', 'description'
+            ]);
+
+            // Parse tests JSON
+            if ($request->tests) {
+                $testsArray = json_decode($request->tests, true);
+                if (is_array($testsArray)) {
+                    $data['tests'] = $testsArray;
+                } else {
+                    $data['tests'] = [];
+                }
+            } else {
+                $data['tests'] = [];
+            }
+
+            $data['status'] = $request->has('status');
+
+            $package->update($data);
+
+            return response()->json(['success' => 'Package updated successfully.']);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
     }
 
     public function testCategories()
     {
-        return view('admin.master.test-categories');
+        return view('admin.master.test-categories-enhanced');
     }
 
     public function getTestCategories(Request $request)
@@ -764,25 +874,41 @@ class AdminController extends Controller
         return response()->json($category);
     }
 
-    public function destroyTestCategory($id)
+    public function updateTestCategory(Request $request, $id)
     {
-        $category = TestCategory::findOrFail($id);
-        
-        // Check if category has tests
-        if ($category->tests()->count() > 0) {
-            return response()->json(['error' => 'Cannot delete category that has tests assigned to it.'], 422);
+        try {
+            $category = TestCategory::findOrFail($id);
+
+            $rules = [
+                'category_name' => [
+                    'required', 
+                    'string', 
+                    'max:255', 
+                    Rule::unique('test_categories', 'category_name')->ignore($id)
+                ],
+                'description' => ['nullable', 'string'],
+            ];
+
+            $request->validate($rules);
+
+            $data = $request->only([
+                'category_name', 'description'
+            ]);
+
+            $data['status'] = $request->has('status');
+
+            $category->update($data);
+
+            return response()->json(['success' => 'Test category updated successfully.']);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
         }
-        
-        $category->delete();
-        return response()->json(['success' => 'Test category deleted successfully.']);
     }
 
     public function associates()
     {
-        return view('admin.master.associates_fixed');
+        return view('admin.master.associates-enhanced');
     }
-
-    // ...existing associate methods...
 
     // Entry Menu Methods
     public function entryList()
@@ -792,7 +918,7 @@ class AdminController extends Controller
 
     public function testBooking()
     {
-        return view('admin.entry.test-booking');
+        return view('admin.entry.test-booking-enhanced');
     }
 
     public function sampleCollection()
@@ -847,17 +973,28 @@ class AdminController extends Controller
             $associateId = $request->associate_id;
 
             $request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'hospital_name' => ['nullable', 'string', 'max:255'],
-                'contact_no' => ['nullable', 'string', 'max:255'],
+                'associate_name' => ['required', 'string', 'max:255'],
+                'organization' => ['nullable', 'string', 'max:255'],
+                'contact_number' => ['nullable', 'string', 'max:20'],
+                'email' => ['nullable', 'email', 'max:255'],
+                'associate_type' => ['nullable', 'string', 'max:100'],
+                'commission_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
                 'address' => ['nullable', 'string'],
-                'percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+                'city' => ['nullable', 'string', 'max:100'],
+                'state' => ['nullable', 'string', 'max:100'],
+                'pincode' => ['nullable', 'string', 'max:10'],
+                'specialization' => ['nullable', 'string', 'max:255'],
+                'registration_number' => ['nullable', 'string', 'max:100'],
+                'notes' => ['nullable', 'string'],
             ]);
 
             $data = $request->only([
-                'name', 'hospital_name', 'contact_no', 'address', 'percent'
+                'associate_name', 'organization', 'contact_number', 'email',
+                'associate_type', 'commission_rate', 'address', 'city', 'state',
+                'pincode', 'specialization', 'registration_number', 'notes'
             ]);
 
+            $data['is_active_referrer'] = $request->has('is_active_referrer');
             $data['status'] = $request->has('status');
 
             Associate::updateOrCreate(['id' => $associateId], $data);
@@ -874,17 +1011,48 @@ class AdminController extends Controller
         return response()->json($associate);
     }
 
-    public function destroyAssociate($id)
+    public function updateAssociate(Request $request, $id)
     {
-        $associate = Associate::findOrFail($id);
-        $associate->delete();
-        return response()->json(['success' => 'Associate deleted successfully.']);
+        try {
+            $associate = Associate::findOrFail($id);
+
+            $request->validate([
+                'associate_name' => ['required', 'string', 'max:255'],
+                'organization' => ['nullable', 'string', 'max:255'],
+                'contact_number' => ['nullable', 'string', 'max:20'],
+                'email' => ['nullable', 'email', 'max:255'],
+                'associate_type' => ['nullable', 'string', 'max:100'],
+                'commission_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+                'address' => ['nullable', 'string'],
+                'city' => ['nullable', 'string', 'max:100'],
+                'state' => ['nullable', 'string', 'max:100'],
+                'pincode' => ['nullable', 'string', 'max:10'],
+                'specialization' => ['nullable', 'string', 'max:255'],
+                'registration_number' => ['nullable', 'string', 'max:100'],
+                'notes' => ['nullable', 'string'],
+            ]);
+
+            $data = $request->only([
+                'associate_name', 'organization', 'contact_number', 'email',
+                'associate_type', 'commission_rate', 'address', 'city', 'state',
+                'pincode', 'specialization', 'registration_number', 'notes'
+            ]);
+
+            $data['is_active_referrer'] = $request->has('is_active_referrer');
+            $data['status'] = $request->has('status');
+
+            $associate->update($data);
+
+            return response()->json(['success' => 'Associate updated successfully.']);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
     }
 
     // Reports Management Methods
     public function reports()
     {
-        return view('admin.reports.index');
+        return view('admin.reports.index-enhanced');
     }
 
     public function getReports(Request $request)
@@ -993,33 +1161,41 @@ class AdminController extends Controller
 
     public function editReport($id)
     {
-        $report = Report::with(['reportTests.test'])->findOrFail($id);
+        $report = Report::with(['patient', 'doctor', 'reportTests.test'])->findOrFail($id);
         $patients = Patient::all();
         $doctors = Doctor::all();
         $tests = Test::all();
+        $packages = Package::with('tests')->get();
         
-        return view('admin.reports.edit', compact('report', 'patients', 'doctors', 'tests'));
+        return view('admin.reports.edit', compact('report', 'patients', 'doctors', 'tests', 'packages'));
     }
 
     public function updateReport(Request $request, $id)
     {
-        $report = Report::findOrFail($id);
-        
         $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'required|exists:doctors,id',
-            'sample_collection_date' => 'required|date',
             'tests' => 'required|array',
+            'tests.*.test_id' => 'required|exists:tests,id',
         ]);
 
-        $report->update($request->only([
-            'patient_id', 'doctor_id', 'sample_collection_date', 'report_status',
-            'technician_name', 'pathologist_name', 'comments', 'total_amount',
-            'discount', 'final_amount', 'payment_status'
-        ]));
+        $report = Report::findOrFail($id);
+        
+        $report->update([
+            'patient_id' => $request->patient_id,
+            'doctor_id' => $request->doctor_id,
+            'report_date' => $request->report_date ?? now(),
+            'report_status' => $request->report_status ?? 'pending',
+            'total_amount' => $request->total_amount ?? 0,
+            'discount' => $request->discount ?? 0,
+            'final_amount' => $request->final_amount ?? 0,
+            'payment_status' => $request->payment_status ?? 'pending',
+        ]);
 
-        // Update test results
+        // Delete existing report tests
         $report->reportTests()->delete();
+
+        // Add new report tests
         foreach ($request->tests as $testData) {
             ReportTest::create([
                 'report_id' => $report->id,
@@ -1041,12 +1217,14 @@ class AdminController extends Controller
     public function destroyReport($id)
     {
         $report = Report::findOrFail($id);
+        
+        // Delete associated report tests
+        $report->reportTests()->delete();
+        
+        // Delete the report
         $report->delete();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Report deleted successfully!'
-        ]);
+        return response()->json(['success' => 'Report deleted successfully.']);
     }
 
     public function printReport($id)

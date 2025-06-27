@@ -23,6 +23,12 @@
     <!-- Custom Responsive CSS -->
     <link rel="stylesheet" href="{{ asset('css/admin-responsive.css') }}">
     
+    <!-- Enhanced AdminLTE3 Customizations -->
+    <link rel="stylesheet" href="{{ asset('css/admin-enhanced.css') }}">
+    
+    <!-- Global Enhanced CSS -->
+    <link rel="stylesheet" href="{{ asset('css/admin-global-enhanced.css') }}">
+    
     @yield('styles')
     
     <!-- Custom User Menu Styles -->
@@ -90,6 +96,8 @@
         .main-sidebar .nav-sidebar .nav-item > .nav-link {
             padding: 0.7rem 1rem;
             transition: all 0.3s ease;
+            border-radius: 0.25rem;
+            margin: 0.1rem 0.5rem;
         }
         
         .main-sidebar .nav-sidebar .nav-item > .nav-link:hover {
@@ -100,6 +108,92 @@
         .main-sidebar .nav-sidebar .nav-item > .nav-link.active {
             background-color: rgba(255, 255, 255, 0.2);
             border-left: 3px solid #fff;
+            font-weight: 600;
+        }
+
+        /* Sidebar Headers */
+        .nav-header {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem 1rem 0.5rem 1rem;
+            margin-top: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Treeview Improvements */
+        .nav-treeview .nav-item .nav-link {
+            padding-left: 3rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-treeview .nav-item .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding-left: 3.2rem;
+        }
+
+        .nav-treeview .nav-item .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 0.25rem;
+            margin: 0.1rem 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Brand Link Enhancement */
+        .brand-link {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-link:hover {
+            text-decoration: none;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* User Panel Enhancement */
+        .user-panel {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-panel .info a {
+            color: #c2c7d0;
+            font-weight: 500;
+        }
+
+        /* Icon Improvements */
+        .nav-icon {
+            margin-right: 0.5rem;
+            width: 1.2rem;
+            text-align: center;
+        }
+
+        /* Sidebar Animation */
+        .main-sidebar {
+            transition: all 0.3s ease;
+        }
+
+        /* Mobile Sidebar */
+        @media (max-width: 767px) {
+            .main-sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar-open .main-sidebar {
+                margin-left: 0;
+            }
+        }
+
+        /* Dark Mode Sidebar Enhancements */
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+            background-color: #007bff;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+
+        .sidebar-dark-primary .nav-treeview > .nav-item > .nav-link.active {
+            background-color: rgba(0, 123, 255, 0.8);
+            color: #fff;
         }
         
         /* Enhanced Cards */
@@ -303,8 +397,8 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="{{ route('admin.dashboard') }}" class="brand-link">
-                <i class="fas fa-tachometer-alt brand-image img-circle elevation-3" style="opacity: .8"></i>
-                <span class="brand-text font-weight-light">Admin Panel</span>
+                <i class="fas fa-microscope brand-image img-circle elevation-3 text-white" style="opacity: .8; margin-left: 0.5rem; margin-right: 0.5rem;"></i>
+                <span class="brand-text font-weight-light">Lab Management</span>
             </a>
 
             <!-- Sidebar -->
@@ -322,115 +416,318 @@
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- Dashboard -->
                         <li class="nav-item">
                             <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
-                        
-                        <!-- Master Menu -->
-                        <li class="nav-item {{ request()->is('admin/master*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ request()->is('admin/master*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-database"></i>
+
+                        <!-- Divider -->
+                        <li class="nav-header">LABORATORY MANAGEMENT</li>
+
+                        <!-- Patient Management -->
+                        <li class="nav-item {{ request()->is('admin/patients*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/patients*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-user-injured"></i>
                                 <p>
-                                    Master
+                                    Patient Management
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.tests') }}" class="nav-link {{ request()->routeIs('admin.tests*') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.patients') }}" class="nav-link {{ request()->routeIs('admin.patients') && !request()->routeIs('admin.patients.create') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Test</p>
+                                        <p>All Patients</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.doctors') }}" class="nav-link {{ request()->routeIs('admin.doctors*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Doctor</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.patients') }}" class="nav-link {{ request()->routeIs('admin.patients*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Patient</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.packages') }}" class="nav-link {{ request()->routeIs('admin.packages*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Package</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.test-categories') }}" class="nav-link {{ request()->routeIs('admin.test-categories*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Test Category</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.associates') }}" class="nav-link {{ request()->routeIs('admin.associates*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Associate</p>
+                                    <a href="{{ route('admin.patients.create') }}" class="nav-link {{ request()->routeIs('admin.patients.create') ? 'active' : '' }}">
+                                        <i class="far fa-plus-square nav-icon"></i>
+                                        <p>Add New Patient</p>
                                     </a>
                                 </li>
                             </ul>
                         </li>
 
-                        <!-- Entry Menu -->
-                        <li class="nav-item {{ request()->is('admin/entry*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ request()->is('admin/entry*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-edit"></i>
+                        <!-- Test Management -->
+                        <li class="nav-item {{ request()->is('admin/tests*') || request()->is('admin/test-categories*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/tests*') || request()->is('admin/test-categories*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-vials"></i>
                                 <p>
-                                    Entry
+                                    Test Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.test-categories') }}" class="nav-link {{ request()->routeIs('admin.test-categories*') ? 'active' : '' }}">
+                                        <i class="far fa-folder nav-icon"></i>
+                                        <p>Test Categories</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.tests') }}" class="nav-link {{ request()->routeIs('admin.tests*') ? 'active' : '' }}">
+                                        <i class="far fa-flask nav-icon"></i>
+                                        <p>Laboratory Tests</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.packages') }}" class="nav-link {{ request()->routeIs('admin.packages*') ? 'active' : '' }}">
+                                        <i class="far fa-box nav-icon"></i>
+                                        <p>Test Packages</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Report Management -->
+                        <li class="nav-item {{ request()->is('admin/reports*') || request()->is('admin/entry*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/reports*') || request()->is('admin/entry*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-file-medical-alt"></i>
+                                <p>
+                                    Report Management
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
                                     <a href="{{ route('admin.entry.test-booking') }}" class="nav-link {{ request()->routeIs('admin.entry.test-booking*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="far fa-calendar-plus nav-icon"></i>
                                         <p>Test Booking</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('admin.entry.sample-collection') }}" class="nav-link {{ request()->routeIs('admin.entry.sample-collection*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="far fa-syringe nav-icon"></i>
                                         <p>Sample Collection</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('admin.entry.result-entry') }}" class="nav-link {{ request()->routeIs('admin.entry.result-entry*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="far fa-edit nav-icon"></i>
                                         <p>Result Entry</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a href="{{ route('admin.reports') }}" class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
+                                        <i class="far fa-file-alt nav-icon"></i>
+                                        <p>All Reports</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a href="{{ route('admin.entry.entry-list') }}" class="nav-link {{ request()->routeIs('admin.entry.entry-list*') ? 'active' : '' }}">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="far fa-list nav-icon"></i>
                                         <p>Entry List</p>
                                     </a>
                                 </li>
                             </ul>
                         </li>
 
+                        <!-- Doctor Management -->
+                        <li class="nav-item {{ request()->is('admin/doctors*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/doctors*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-user-md"></i>
+                                <p>
+                                    Doctor Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.doctors') }}" class="nav-link {{ request()->routeIs('admin.doctors') && !request()->routeIs('admin.doctors.create') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>All Doctors</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.doctors.create') }}" class="nav-link {{ request()->routeIs('admin.doctors.create') ? 'active' : '' }}">
+                                        <i class="far fa-plus-square nav-icon"></i>
+                                        <p>Add New Doctor</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Divider -->
+                        <li class="nav-header">BUSINESS MANAGEMENT</li>
+
+                        <!-- Finance & Billing -->
+                        <li class="nav-item {{ request()->is('admin/billing*') || request()->is('admin/invoices*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/billing*') || request()->is('admin/invoices*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-receipt"></i>
+                                <p>
+                                    Finance & Billing
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-money-bill-alt nav-icon"></i>
+                                        <p>Billing</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-file-invoice nav-icon"></i>
+                                        <p>Invoices</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-chart-bar nav-icon"></i>
+                                        <p>Revenue Reports</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Partner Management -->
+                        <li class="nav-item {{ request()->is('admin/associates*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/associates*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-handshake"></i>
+                                <p>
+                                    Partner Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.associates') }}" class="nav-link {{ request()->routeIs('admin.associates*') ? 'active' : '' }}">
+                                        <i class="far fa-building nav-icon"></i>
+                                        <p>Associates</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-percentage nav-icon"></i>
+                                        <p>Commission Management</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Divider -->
+                        <li class="nav-header">SYSTEM MANAGEMENT</li>
+
+                        <!-- User Management -->
+                        <li class="nav-item {{ request()->is('admin/users*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-users-cog"></i>
+                                <p>
+                                    User Management
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.users') }}" class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+                                        <i class="far fa-users nav-icon"></i>
+                                        <p>All Users</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-user-shield nav-icon"></i>
+                                        <p>Roles & Permissions</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Reports & Analytics -->
+                        <li class="nav-item {{ request()->is('admin/analytics*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/analytics*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <p>
+                                    Reports & Analytics
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-chart-pie nav-icon"></i>
+                                        <p>Laboratory Analytics</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-calendar-check nav-icon"></i>
+                                        <p>Daily Reports</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-calendar-alt nav-icon"></i>
+                                        <p>Monthly Reports</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-file-export nav-icon"></i>
+                                        <p>Export Data</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Settings -->
+                        <li class="nav-item {{ request()->is('admin/settings*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/settings*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-cogs"></i>
+                                <p>
+                                    Settings
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.settings') }}" class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
+                                        <i class="far fa-cog nav-icon"></i>
+                                        <p>General Settings</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-envelope nav-icon"></i>
+                                        <p>Email Settings</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-database nav-icon"></i>
+                                        <p>Backup & Restore</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="far fa-shield-alt nav-icon"></i>
+                                        <p>Security Settings</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Divider -->
+                        <li class="nav-header">QUICK ACTIONS</li>
+
+                        <!-- Quick Add -->
                         <li class="nav-item">
-                            <a href="{{ route('admin.reports') }}" class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-file-medical"></i>
-                                <p>Reports</p>
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#quickAddModal" title="Ctrl + N">
+                                <i class="nav-icon fas fa-plus-circle text-success"></i>
+                                <p>Quick Add Patient</p>
                             </a>
                         </li>
+
+                        <!-- Quick Search -->
                         <li class="nav-item">
-                            <a href="{{ route('admin.users') }}" class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>Users</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.settings') }}" class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-cog"></i>
-                                <p>Settings</p>
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#quickSearchModal" title="Ctrl + F">
+                                <i class="nav-icon fas fa-search text-info"></i>
+                                <p>Quick Search</p>
                             </a>
                         </li>
                     </ul>
@@ -582,9 +879,194 @@
             $(document).on('focusin', '*', function() {
                 $(this).css('outline', 'none');
             });
+            
+            // Keyboard Shortcuts
+            $(document).keydown(function(e) {
+                // Ctrl + N for Quick Add Patient
+                if (e.ctrlKey && e.keyCode === 78) {
+                    e.preventDefault();
+                    $('#quickAddModal').modal('show');
+                    return false;
+                }
+                
+                // Ctrl + F for Quick Search
+                if (e.ctrlKey && e.keyCode === 70) {
+                    e.preventDefault();
+                    $('#quickSearchModal').modal('show');
+                    setTimeout(() => {
+                        $('#searchQuery').focus();
+                    }, 500);
+                    return false;
+                }
+                
+                // Escape to close modals
+                if (e.keyCode === 27) {
+                    $('.modal').modal('hide');
+                }
+            });
+            
+            // Add tooltips for keyboard shortcuts
+            $('[data-toggle="tooltip"]').tooltip();
         });
     </script>
     
     @stack('scripts')
+
+    <!-- Quick Add Patient Modal -->
+    <div class="modal fade" id="quickAddModal" tabindex="-1" role="dialog" aria-labelledby="quickAddModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title text-white" id="quickAddModalLabel">
+                        <i class="fas fa-plus-circle mr-2"></i>Quick Add Patient
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="quickAddForm">
+                        <div class="form-group">
+                            <label for="patientName">Patient Name</label>
+                            <input type="text" class="form-control" id="patientName" placeholder="Enter patient name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientPhone">Phone Number</label>
+                            <input type="tel" class="form-control" id="patientPhone" placeholder="Enter phone number" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="patientAge">Age</label>
+                                    <input type="number" class="form-control" id="patientAge" placeholder="Age" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="patientGender">Gender</label>
+                                    <select class="form-control" id="patientGender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveQuickPatient()">
+                        <i class="fas fa-save mr-2"></i>Save Patient
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Search Modal -->
+    <div class="modal fade" id="quickSearchModal" tabindex="-1" role="dialog" aria-labelledby="quickSearchModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title text-white" id="quickSearchModalLabel">
+                        <i class="fas fa-search mr-2"></i>Quick Search
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="searchQuery">Search for patients, reports, or tests</label>
+                        <input type="text" class="form-control form-control-lg" id="searchQuery" placeholder="Type to search..." oninput="performQuickSearch(this.value)">
+                    </div>
+                    <div id="searchResults" class="mt-3">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-search fa-2x mb-2"></i>
+                            <p>Start typing to search...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quick Add Patient Function
+        function saveQuickPatient() {
+            const name = document.getElementById('patientName').value;
+            const phone = document.getElementById('patientPhone').value;
+            const age = document.getElementById('patientAge').value;
+            const gender = document.getElementById('patientGender').value;
+            
+            if (!name || !phone || !age || !gender) {
+                Swal.fire('Error', 'Please fill all required fields', 'error');
+                return;
+            }
+            
+            // Here you would typically make an AJAX call to save the patient
+            // For demo purposes, we'll just show a success message
+            Swal.fire({
+                title: 'Success!',
+                text: 'Patient added successfully',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                $('#quickAddModal').modal('hide');
+                document.getElementById('quickAddForm').reset();
+            });
+        }
+        
+        // Quick Search Function
+        function performQuickSearch(query) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (query.length < 2) {
+                resultsDiv.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <p>Start typing to search...</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Simulate search results (replace with actual AJAX call)
+            resultsDiv.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Searching...
+                </div>
+            `;
+            
+            setTimeout(() => {
+                resultsDiv.innerHTML = `
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1"><i class="fas fa-user mr-2"></i>John Doe</h6>
+                                <small>Patient</small>
+                            </div>
+                            <p class="mb-1">Phone: +1234567890</p>
+                            <small>Last visit: 2 days ago</small>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1"><i class="fas fa-file-medical mr-2"></i>Report #RPT001</h6>
+                                <small>Report</small>
+                            </div>
+                            <p class="mb-1">Patient: Jane Smith</p>
+                            <small>Created: 1 week ago</small>
+                        </div>
+                    </div>
+                `;
+            }, 500);
+        }
+    </script>
 </body>
-</html> 
+</html>

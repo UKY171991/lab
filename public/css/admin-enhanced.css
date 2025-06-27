@@ -1,0 +1,272 @@
+/* AdminLTE3 Custom Enhancements for Laboratory Management System */
+
+/* Sidebar Enhanced Styling */
+.main-sidebar {
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+
+.sidebar-dark-primary {
+    background: linear-gradient(180deg, #343a40 0%, #495057 100%);
+}
+
+/* Enhanced Navigation */
+.nav-sidebar .nav-item > .nav-link {
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-sidebar .nav-item > .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+}
+
+.nav-sidebar .nav-item > .nav-link:hover::before {
+    left: 100%;
+}
+
+/* Navigation Headers */
+.nav-header {
+    position: relative;
+}
+
+.nav-header::after {
+    content: '';
+    position: absolute;
+    bottom: -0.25rem;
+    left: 1rem;
+    right: 1rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+/* Enhanced Brand Link */
+.brand-link {
+    background: rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.brand-link:hover {
+    background: rgba(0,0,0,0.2);
+    transform: scale(1.02);
+}
+
+/* User Panel Improvements */
+.user-panel {
+    background: rgba(255,255,255,0.05);
+    border-radius: 0.5rem;
+    margin: 1rem 0.5rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.user-panel:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+}
+
+.user-panel .image img {
+    border: 2px solid rgba(255,255,255,0.3);
+    transition: all 0.3s ease;
+}
+
+.user-panel:hover .image img {
+    border-color: rgba(255,255,255,0.6);
+    transform: scale(1.1);
+}
+
+/* Treeview Animation */
+.nav-treeview {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Active Menu Indicators */
+.nav-sidebar .nav-item > .nav-link.active {
+    position: relative;
+}
+
+.nav-sidebar .nav-item > .nav-link.active::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid #fff;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+}
+
+/* Menu Icons Enhancement */
+.nav-icon {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.nav-item:hover .nav-icon {
+    transform: scale(1.1);
+}
+
+/* Badge Styles for Quick Actions */
+.nav-link .badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+}
+
+/* Responsive Sidebar */
+@media (max-width: 991px) {
+    .main-sidebar {
+        margin-left: -250px;
+        transition: margin-left 0.3s ease;
+    }
+    
+    .sidebar-open .main-sidebar {
+        margin-left: 0;
+    }
+    
+    .nav-header {
+        font-size: 0.7rem;
+    }
+    
+    .nav-sidebar .nav-item > .nav-link {
+        padding: 0.5rem 0.8rem;
+    }
+}
+
+/* Loading Animation for Quick Search */
+.search-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    border-radius: 1rem 1rem 0 0;
+    border-bottom: none;
+}
+
+.modal-footer {
+    border-top: none;
+    border-radius: 0 0 1rem 1rem;
+}
+
+/* Form Enhancements in Modals */
+.modal .form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.modal .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    transform: scale(1.02);
+}
+
+/* Button Enhancements */
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Sidebar Scrollbar */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+/* Dark Theme Improvements */
+.dark-mode .main-sidebar {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.dark-mode .nav-header {
+    color: rgba(255,255,255,0.7);
+}
+
+.dark-mode .user-panel {
+    background: rgba(255,255,255,0.03);
+}
+
+/* Print Styles */
+@media print {
+    .main-sidebar,
+    .main-header,
+    .content-header {
+        display: none !important;
+    }
+    
+    .content-wrapper {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+}
