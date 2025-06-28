@@ -56,6 +56,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/patients/{patient}/edit', [AdminController::class, 'editPatient'])->name('patients.edit');
     Route::put('/patients/{patient}', [AdminController::class, 'updatePatient'])->name('patients.update');
     Route::delete('/patients/{patient}', [AdminController::class, 'destroyPatient'])->name('patients.destroy');
+    Route::post('/patients/bulk-delete', [AdminController::class, 'bulkDeletePatients'])->name('patients.bulk-delete');
     
     // Package Management Routes
     Route::get('/packages', [AdminController::class, 'packages'])->name('packages');

@@ -21,6 +21,22 @@ use Yajra\DataTables\Facades\DataTables;
 
 class AdminController extends Controller
 {
+    /**
+     * Bulk delete patients by IDs.
+     */
+    public function bulkDeletePatients(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['error' => 'No patient IDs provided.'], 422);
+        }
+        $deleted = Patient::whereIn('id', $ids)->delete();
+        return response()->json([
+            'success' => true,
+            'deleted_count' => $deleted,
+            'message' => $deleted . ' patients deleted successfully.'
+        ]);
+    }
     public function dashboard()
     {
         return view('admin.dashboard');
@@ -560,23 +576,28 @@ class AdminController extends Controller
 
     public function getPatients(Request $request)
     {
-        $data = Patient::select('patients.*')->orderBy('created_at', 'desc');
+        $data = Patient::select('patients.id', 'patients.client_name', 'patients.age', 'patients.sex', 'patients.mobile_number', 'patients.blood_group', 'patients.created_at', 'patients.status')->orderBy('created_at', 'desc');
         return DataTables::of($data)
             ->addIndexColumn()
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="row-checkbox" value="'.$row->id.'">';
+            })
+            ->addColumn('avatar', function ($row) {
+                $avatar = 'https://ui-avatars.com/api/?name='.urlencode($row->client_name).'&background=6366f1&color=ffffff&size=40';
+                return '<img src="'.$avatar.'" class="user-avatar" alt="Avatar">';
+            })
+            ->addColumn('age_gender', function ($row) {
+                $gender = $row->sex ? $row->sex : 'N/A';
+                $age = $row->age ? $row->age . ' years' : 'N/A';
+                return $age . ' / ' . $gender;
+            })
+            ->addColumn('last_visit', function ($row) {
+                return $row->created_at ? $row->created_at->format('d M Y') : 'N/A';
+            })
             ->addColumn('status', function ($row) {
                 return $row->status ? 
                     '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>' : 
                     '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Inactive</span>';
-            })
-            ->addColumn('sex_badge', function ($row) {
-                $color = $row->sex === 'Male' ? 'primary' : ($row->sex === 'Female' ? 'pink' : 'secondary');
-                return $row->sex ? '<span class="badge badge-' . $color . '">' . $row->sex . '</span>' : 'N/A';
-            })
-            ->addColumn('age_display', function ($row) {
-                return $row->age ? $row->age . ' years' : 'N/A';
-            })
-            ->addColumn('created_at_formatted', function ($row) {
-                return $row->created_at ? $row->created_at->format('d M Y') : 'N/A';
             })
             ->addColumn('action', function ($row) {
                 $btn = '<div class="btn-group" role="group">';
@@ -589,7 +610,7 @@ class AdminController extends Controller
                 $btn .= '</div>';
                 return $btn;
             })
-            ->rawColumns(['status', 'sex_badge', 'action'])
+            ->rawColumns(['checkbox', 'avatar', 'status', 'action'])
             ->make(true);
     }
 
